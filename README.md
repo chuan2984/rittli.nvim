@@ -215,6 +215,8 @@ end
 
 ## 🌻 Project Roadmap
 - Better documentation and lua-ls type annotations
+- Add lsp root directory based tasks loading (like [here](https://github.com/jedrzejboczar/toggletasks.nvim))
+- Add builtin common tasks (npm run dev, )
 
 ## Knowing issues 🚨
 - Tmux and Wezterm providers do not install env variables (just use 'export VARNAME="my value"' if you really need it)

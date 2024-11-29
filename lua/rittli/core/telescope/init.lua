@@ -3,10 +3,10 @@ local M = {}
 local session_manager = require("rittli.core.session_manager")
 local task_manager = require("rittli.core.task_manager")
 local config = require("rittli.config").config
+local terminal_picker = require("rittli.core.telescope.terminal_picker")
 
 local finders = require("telescope.finders")
 local pickers = require("telescope.pickers")
-local previewers = require("telescope.previewers")
 local conf = require("telescope.config").values
 local action_state = require("telescope.actions.state")
 local actions = require("telescope.actions")
@@ -46,7 +46,7 @@ end
 
 custom_actions.attach_to_terminal_handler_and_launch = function()
   local selection = action_state.get_selected_entry()
-  M.terminal_handlers_picker({}, selection.value)
+  terminal_picker.terminal_handlers_picker({}, selection.value)
 end
 
 M.tasks_picker = function(opts)
@@ -95,49 +95,6 @@ M.tasks_picker = function(opts)
         end
       end,
     },
-  })
-  picker:find()
-end
-
----@param task_to_launch Task
-M.terminal_handlers_picker = function(opts, task_to_launch)
-  opts = {}
-  local picker = pickers.new(opts, {
-    prompt_title = "SelectTerminalToLaunchTask",
-    finder = finders.new_table({
-      results = session_manager.get_all_lonely_terminal_handlers(),
-      ---@param handler ITerminalHandler
-      entry_maker = function(handler)
-        local name = handler.get_name()
-        return {
-          value = handler,
-          display = name,
-          ordinal = name,
-        }
-      end,
-    }),
-    previewer = previewers.new_buffer_previewer({
-      title = "TerminalPreview",
-      define_preview = function(self, entry, status)
-        local handler = entry.value
-        local text = handler.get_text()
-        vim.bo[self.state.bufnr].filetype = "bash"
-        vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, text)
-      end,
-    }),
-    sorter = conf.generic_sorter(opts),
-    attach_mappings = function(prompt_bufnr, map)
-      map({ "i", "n" }, "<Enter>", function()
-        local selection = action_state.get_selected_entry()
-        if not selection or not selection.value.focus then
-          return
-        end
-        session_manager.register_connection(task_to_launch.name, selection.value)
-        actions.close(prompt_bufnr)
-        M.launch_task(task_to_launch)
-      end)
-      return true
-    end,
   })
   picker:find()
 end
