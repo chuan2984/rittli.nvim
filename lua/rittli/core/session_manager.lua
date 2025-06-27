@@ -37,6 +37,15 @@ function SessionManager.find_connection(task_name)
   end
 end
 
+function SessionManager.get_all_terminal_handlers()
+  local all = config.terminal_provider.get_all_available_handlers()
+  local all_handlers = {}
+  for _, handler in ipairs(all) do
+    table.insert(all_handlers, handler)
+  end
+  return all_handlers
+end
+
 function SessionManager.get_all_lonely_terminal_handlers()
   local all = config.terminal_provider.get_all_available_handlers()
   local lonely_handlers = {}

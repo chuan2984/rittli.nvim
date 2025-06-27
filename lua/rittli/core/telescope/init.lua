@@ -4,6 +4,7 @@ local session_manager = require("rittli.core.session_manager")
 local task_manager = require("rittli.core.task_manager")
 local config = require("rittli.config").config
 local terminal_picker = require("rittli.core.telescope.terminal_picker")
+local utils = require("rittli.utils")
 
 local finders = require("telescope.finders")
 local pickers = require("telescope.pickers")
@@ -49,17 +50,26 @@ custom_actions.attach_to_terminal_handler_and_launch = function()
   terminal_picker.terminal_handlers_picker({}, selection.value)
 end
 
+local telescope_display_maker = function(entry)
+  local task = entry.value
+  local task_name_max_len = 35
+  local task_name = utils.shrink_line(task.name, task_name_max_len)
+  task_name = utils.justify_str_left(task_name, task_name_max_len + 5, " ")
+  local file_path = vim.fn.fnamemodify(task.task_source_file_path, ":~")
+  return task_name .. string.format("[%s]", file_path)
+end
+
 M.tasks_picker = function(opts)
   opts = opts or {}
 
   local picker = pickers.new(opts, {
-   prompt_title = "SelectTaskToLaunch",
+    prompt_title = "SelectTaskToLaunch",
     finder = finders.new_table({
       results = task_manager.collect_tasks(),
       entry_maker = function(task)
         return {
           value = task,
-          display = config.telescope_display_maker,
+          display = telescope_display_maker,
           ordinal = task.name,
           filename = task.task_source_file_path,
           lnum = task.task_begin_line_number,
@@ -96,6 +106,7 @@ M.tasks_picker = function(opts)
       end,
     },
   })
+
   picker:find()
 end
 

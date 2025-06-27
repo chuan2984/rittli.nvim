@@ -46,6 +46,7 @@ function M.load_tasks_from_file(file_path)
   for _, raw_task in ipairs(module_with_tasks.tasks) do
     raw_task.is_available = raw_task.is_available or is_available_default_for_file
     for line in file_with_tasks_lines do
+      -- TODO: theres a problem with this find here
       line_number = line_number + 1
       if string.find(line, raw_task.name) then
         break

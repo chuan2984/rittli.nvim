@@ -1,5 +1,6 @@
 local config = require("rittli.config").config
 local neovim_terminal_provider = config.conveniences.terminal_provider
+local session_manager = require("rittli.core.session_manager")
 local utils = require("rittli.utils")
 
 local M = {}
@@ -32,6 +33,40 @@ local function register_terminal_enter()
     window_config = vim.api.nvim_win_get_config(0),
   }
   table.insert(terminals_enters_stack, enter_info)
+end
+
+-- TODO: move this elsewhere since this only concerns nvim terminals
+local current_pane_id = nil
+local previous_pane_id = nil
+function M.toggle_last_openned_terminal_wezterm()
+  local focused_now = utils.rm_endline(os.getenv("WEZTERM_PANE"))
+
+  if not previous_pane_id then
+    -- First time toggling: track current, then switch to session pane
+    local last_runned = session_manager.get_last_runned_task_name()
+    if not last_runned then
+      vim.notify("No terminal tracked by Rittli")
+      return
+    end
+    local connection = session_manager.find_connection(last_runned)
+    if connection then
+      current_pane_id = focused_now
+      previous_pane_id = connection.terminal_handler.get_info_to_reattach()
+      connection.terminal_handler.focus()
+    end
+  else
+    -- Toggle between the two panes
+    local target_pane_id
+    if focused_now == current_pane_id then
+      -- Currently on original pane, switch to terminal
+      target_pane_id = previous_pane_id
+    else
+      -- Currently on terminal pane, switch back to original
+      target_pane_id = current_pane_id
+    end
+
+    vim.system({ "wezterm", "cli", "activate-pane", "--pane-id", target_pane_id }):wait()
+  end
 end
 
 function M.toggle_last_openned_terminal()
@@ -67,7 +102,7 @@ end
 
 vim.api.nvim_create_autocmd("TermOpen", {
   callback = function()
-  if not config.conveniences.should_register_terminal_enter() then
+    if not config.conveniences.should_register_terminal_enter() then
       return
     end
     vim.api.nvim_command("set ft=terminal")
@@ -100,7 +135,7 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
 })
 
 vim.api.nvim_create_autocmd("SessionLoadPost", {
-  group = vim.api.nvim_create_augroup("RegisterAllOpennedTerminalsIfSessionIsRestored", {clear = true}),
+  group = vim.api.nvim_create_augroup("RegisterAllOpennedTerminalsIfSessionIsRestored", { clear = true }),
   callback = function()
     for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
       local buf_name = vim.api.nvim_buf_get_name(bufnr)
@@ -110,7 +145,7 @@ vim.api.nvim_create_autocmd("SessionLoadPost", {
         register_terminal_enter()
       end
     end
-  end
+  end,
 })
 
 return M

@@ -1,5 +1,4 @@
 local neovim = require("rittli.core.terminal_providers.neovim")
-local utils = require("rittli.utils")
 
 local M = {}
 
@@ -14,15 +13,7 @@ M.config = {
   disable_local_tasks_updater_messages = false,
   reload_last_task_when_cwd_changes = true,
   terminal_provider = neovim.CreateTabProvider(),
-
-  telescope_display_maker = function(entry)
-    local task = entry.value
-    local task_name_max_len = 35
-    local task_name = utils.shrink_line(task.name, task_name_max_len)
-    task_name = utils.justify_str_left(task_name, task_name_max_len + 5, " ")
-    local file_path = vim.fn.fnamemodify(task.task_source_file_path, ":~")
-    return task_name .. string.format("[%s]", file_path)
-  end,
+  picker = "snacks", -- snacks or telescope
 
   conveniences = {
     ---You may want to turn off this if you are going to use westerw instead of the built-in neovim terminal
