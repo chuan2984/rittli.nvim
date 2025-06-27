@@ -178,8 +178,8 @@ M.picker_config = {
   win = {
     input = {
       keys = {
-        ["<c-r>"] = { "reuse_as_template", mode = { "n", "i" } },
-        ["<c-a>"] = { "attach_to_existing_terminal", mode = { "n", "i" } },
+        ["<c-e>"] = { "reuse_as_template", mode = { "n", "i" } },
+        ["<c-r>"] = { "attach_to_existing_terminal", mode = { "n", "i" } },
       },
     },
   },
